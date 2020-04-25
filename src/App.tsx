@@ -1,26 +1,34 @@
-import React from 'react';
-import logo from './logo.svg';
-import './App.css';
+import React, { FC } from 'react';
+import { BrowserRouter as Router, Route, Switch } from 'react-router-dom';
 
-function App() {
+import { LandingPage } from './components/LandingPage';
+import { RestaurantDetails } from './components/RestaurantDetails';
+import { RestaurantsList } from './components/RestaurantsList';
+import { VerificationPage } from './components/VerificationPage';
+
+interface AppProps {}
+
+export const App: FC<AppProps> = () => {
+  // todo add 
+  // todo add reporting violations page
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.tsx</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
+    <main>
+      <h1>Welcome to SayFood!</h1>
+      <Router>
+        <Switch>
+          <Route exact path="/">
+            <LandingPage />
+          </Route>
+          <Route exact path="/restaurants">
+            <RestaurantsList />
+          </Route>
+          <Route exact path="/restaurants/:id" children={<RestaurantDetails />} />
+          <Route exact path="/verification">
+            <VerificationPage />
+          </Route>
+          <Route path="*">Not found (404)</Route>
+        </Switch>
+      </Router>
+    </main>
   );
-}
-
-export default App;
+};
