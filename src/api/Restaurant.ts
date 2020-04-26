@@ -1,5 +1,7 @@
 import { useState, useEffect } from 'react';
+import { useDispatch } from 'react-redux';
 import { mockRestaurants } from './mocks';
+import { setRestaurants, bookTable } from '../store/actions';
 
 const formatTime = (hours: number) => `${Math.round(hours / 100)}:${hours % 100 === 0 ? '00' : hours % 100}`;
 
@@ -26,49 +28,23 @@ export interface Restaurant {
 }
 
 export const useRestaurants = () => {
-  const [restaurants, setRestaurants] = useState<Record<string, Restaurant>>({});
+  const dispatch = useDispatch();
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [isError, setIsError] = useState<boolean>(false);
 
   useEffect(() => {
     setIsLoading(true);
     setIsError(false);
-    setRestaurants({});
+    dispatch(setRestaurants({}));
 
     setTimeout(() => {
-      setRestaurants(mockRestaurants);
+      dispatch(setRestaurants({ ...mockRestaurants }));
       setIsLoading(false);
       setIsError(false);
     }, 300);
-  }, []);
+  }, [dispatch]);
 
-  return { isError, isLoading, restaurants };
-};
-
-export const useRestaurant = (id: string | null) => {
-  const [restaurant, setRestaurant] = useState<Restaurant | null>(null);
-  const [isLoading, setIsLoading] = useState<boolean>(false);
-  const [isError, setIsError] = useState<boolean>(false);
-
-  useEffect(() => {
-    if (id === null) {
-      setIsLoading(false);
-      setIsError(false);
-      setRestaurant(null);
-    } else {
-      setIsLoading(true);
-      setIsError(false);
-      setRestaurant(null);
-
-      setTimeout(() => {
-        setRestaurant(mockRestaurants[id]);
-        setIsLoading(false);
-        setIsError(false);
-      }, 300);
-    }
-  }, [id]);
-
-  return { isError, isLoading, restaurant };
+  return { isError, isLoading };
 };
 
 export const useOccupancy = (restaurant: Restaurant, date: string) => {
@@ -100,6 +76,7 @@ export const useOccupancy = (restaurant: Restaurant, date: string) => {
 };
 
 export const useBookTable = () => {
+  const dispatch = useDispatch();
   const generateCode = (reservations: Array<Reservation>) => {
     const existingCodes = reservations.map(reservation => reservation.code);
     let code;
@@ -109,7 +86,7 @@ export const useBookTable = () => {
     return code;
   };
 
-  const bookTable = (restaurant: Restaurant, date: string, time: string) =>
+  return (restaurant: Restaurant, date: string, time: string) =>
     new Promise(resolve => {
       setTimeout(() => {
         const reservationsMap: Record<string, Array<Reservation>> = mockRestaurants[restaurant.id].reservations;
@@ -117,15 +94,16 @@ export const useBookTable = () => {
         if (!Array.isArray(reservationsMap[date])) {
           reservationsMap[date] = [];
         }
-        console.log('yyy pushing');
+
         reservationsMap[date].push({
-          time: Number(time),
+          time: Number(time.replace(/:/, '')),
           duration: restaurant.reservationTimeMinutes,
           maximumNumberOfPeople: restaurant.tableSize,
           code: generateCode(reservationsMap[date]),
         });
+
+        dispatch(bookTable({ ...mockRestaurants }));
         resolve();
       }, 300);
     });
-  return bookTable;
 };

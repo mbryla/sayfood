@@ -1,7 +1,9 @@
 import React, { FC, useMemo } from 'react';
+import { useSelector } from 'react-redux';
+import { Link } from 'react-router-dom';
 import styled from 'styled-components';
 import { useRestaurants, Restaurant } from '../api/Restaurant';
-import { Link } from 'react-router-dom';
+import { restaurantsSelector } from '../store/selectors';
 
 interface RestaurantsListProps {}
 
@@ -31,7 +33,8 @@ const RestaurantEntry: FC<RestaurantEntryProps> = ({ restaurant }) => {
 };
 
 export const RestaurantsList: FC<RestaurantsListProps> = () => {
-  const { isError, isLoading, restaurants } = useRestaurants();
+  const { isError, isLoading } = useRestaurants();
+  const restaurants: Record<string, Restaurant> = useSelector(restaurantsSelector);
   const restaurantsArray = useMemo(() => Object.values(restaurants), [restaurants]);
 
   if (isLoading) {
