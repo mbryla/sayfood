@@ -1,9 +1,13 @@
 import { useState, useEffect } from 'react';
 import { mockRestaurants } from './mocks';
 
+const formatTime = (hours: number) => `${Math.round(hours / 100)}:${hours % 100 === 0 ? '00' : hours % 100}`;
+
 export interface Reservation {
-  time: string,
-  numberOfPeople: number,
+  code: string;
+  time: number; // army time system eg. 1230, 0050, 1930
+  duration: number;
+  maximumNumberOfPeople: number;
 }
 
 export interface Restaurant {
@@ -12,10 +16,9 @@ export interface Restaurant {
   address: string;
   tables: number;
   tableSize: number;
-  openingHour: number;
-  closingHour: number;
+  openingTime: number;
+  closingTime: number;
   reservationTimeMinutes: number;
-  reservationGraceTimeMinutes: number;
   reservations: Record<string, Array<Reservation>>;
 }
 
@@ -63,4 +66,32 @@ export const useRestaurant = (id: string | null) => {
   }, [id]);
 
   return { isError, isLoading, restaurant };
+};
+
+export const useOccupancy = (restaurant: Restaurant, date: string) => {
+  if (!(restaurant && date)) {
+    return {};
+  }
+
+  // create empty occupancy array
+  const occupancy: Record<string, number> = {};
+  for (let time = restaurant.openingTime; time < restaurant.closingTime - restaurant.reservationTimeMinutes; time += 30) {
+    if (time % 100 === 60) {
+      time += 40; // hour flip
+    }
+    occupancy[formatTime(time)] = 0;
+  }
+
+  // fill in occupancy based on reservations
+  const reservations = restaurant.reservations[date] || [];
+  reservations.forEach(reservation => {
+    for (let time = reservation.time; time < reservation.time + reservation.duration; time += 30) {
+      if (time % 100 === 60) {
+        time += 40; // hour flip
+      }
+      occupancy[formatTime(time)] += 1;
+    }
+  });
+
+  return occupancy;
 };
