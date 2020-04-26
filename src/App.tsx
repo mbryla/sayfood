@@ -2,7 +2,7 @@ import React, { FC } from 'react';
 import { BrowserRouter as Router, Route, Switch } from 'react-router-dom';
 
 import { LandingPage } from './components/LandingPage';
-import { RestaurantDetails } from './components/RestaurantDetails';
+import { RestaurantDetailsPage } from './components/RestaurantDetails';
 import { RestaurantsList } from './components/RestaurantsList';
 import { VerificationPage } from './components/VerificationPage';
 
@@ -22,7 +22,7 @@ export const App: FC<AppProps> = () => {
           <Route exact path="/restaurants">
             <RestaurantsList />
           </Route>
-          <Route exact path="/restaurants/:id" children={<RestaurantDetails />} />
+          <Route exact path="/restaurants/:id" children={<RestaurantDetailsPage />} />
           <Route exact path="/verification">
             <VerificationPage />
           </Route>
