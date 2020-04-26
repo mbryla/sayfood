@@ -20,10 +20,6 @@ const Reservations: FC<ReservationsProps> = ({ date, restaurant }) => {
   const freeTables = times.filter(time => occupancy[time] < restaurant.tables && time >= formatHours((new Date().getHours() * 100 + new Date().getMinutes())));
   const [bookingTime, setBookingTime] = useState(freeTables.length ? freeTables[0] : undefined);
 
-  useEffect(() => {
-    setBookingTime(freeTables.length ? freeTables[0] : undefined);
-  }, [freeTables]);
-
   const handleTimeChange = (event: ChangeEvent<HTMLSelectElement>) => {
     setBookingTime(event.target.value);
   };
