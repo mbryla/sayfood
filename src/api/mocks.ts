@@ -62,3 +62,5 @@ export const mockRestaurants: Record<string, Restaurant> = {
     reservations: {},
   },
 };
+
+export const mockMyRestaurantId = 'antonio-mozzi';

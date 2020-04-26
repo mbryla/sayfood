@@ -7,11 +7,15 @@ export const LandingPage: FC<LandingPageProps> = () => {
   return (
     <div>
       <p>
-        <Link to="/restaurants">restaurants</Link>
+        <Link to="/booking">Booking app</Link>
       </p>
       <p>
-        <Link to="/verification">verification</Link>
+        <Link to="/myrestaurant">Restaurant app</Link>
       </p>
+      <p>
+        <Link to="/government" style={{ pointerEvents: "none"}} onClick={e => e.preventDefault()}>Government view</Link>
+      </p>
+
     </div>
   );
 };
