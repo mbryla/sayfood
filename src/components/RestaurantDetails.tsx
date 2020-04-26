@@ -1,8 +1,10 @@
-import React, { ChangeEvent, FC, useState } from 'react';
+import React, { ChangeEvent, FC, useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
-import { useRestaurant, useOccupancy, Restaurant, useBookTable } from '../api/Restaurant';
+import { useRestaurants, useOccupancy, Restaurant, useBookTable } from '../api/Restaurant';
+import { useSelector } from 'react-redux';
+import { restaurantsSelector } from '../store/selectors';
 
-const formatHours = (hours: number) => `${Math.round(hours / 100)}:${hours % 100 === 0 ? '00' : hours % 100}`;
+const formatHours = (hours: number) => `${Math.floor(hours / 100)}:${hours % 100 === 0 ? '00' : hours % 100}`;
 
 interface RestaurantDetailsProps {}
 
@@ -12,22 +14,24 @@ interface ReservationsProps {
 }
 
 const Reservations: FC<ReservationsProps> = ({ date, restaurant }) => {
-  console.log('xxx', date, restaurant);
   const bookTable = useBookTable();
   const occupancy = useOccupancy(restaurant, date);
   const times = Object.keys(occupancy);
-  const [bookingTime, setBookingTime] = useState(times.length ? times[0] : undefined);
-  const freeTables = times.filter(time => occupancy[time] < restaurant.tables);
+  const freeTables = times.filter(time => occupancy[time] < restaurant.tables && time >= formatHours((new Date().getHours() * 100 + new Date().getMinutes())));
+  const [bookingTime, setBookingTime] = useState(freeTables.length ? freeTables[0] : undefined);
 
   const handleTimeChange = (event: ChangeEvent<HTMLSelectElement>) => {
     setBookingTime(event.target.value);
   };
 
   const handleReserveButtonClick = () => {
-    console.log('yyy clicking');
+    setBookingTime(freeTables.length ? freeTables[0] : undefined);
     bookTable(restaurant, date, bookingTime as string);
-    // todo create a token and store it in the restaurant reservations map
   };
+
+  if (date < new Date().toISOString().substring(0, 10)) {
+    return <p>Sorry, you cannot book in the past!</p>
+  }
 
   return (
     <>
@@ -44,15 +48,17 @@ const Reservations: FC<ReservationsProps> = ({ date, restaurant }) => {
 };
 
 export const RestaurantDetails: FC<RestaurantDetailsProps> = () => {
+  const { isError, isLoading } = useRestaurants();
   const { id } = useParams();
-  const { isError, isLoading, restaurant } = useRestaurant(id || null);
+  const restaurants = useSelector(restaurantsSelector);
+  const restaurant = id ? restaurants[id] : null;
   const [date, setDate] = useState<string>(new Date().toISOString().substring(0, 10));
 
   if (isLoading) {
     return <p>Loading. Please wait...</p>;
   }
 
-  if (isError || restaurant === null) {
+  if (isError || !restaurant) {
     return <p>Unexpected error occurred! Please try again later!</p>;
   }
 
