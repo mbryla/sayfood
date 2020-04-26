@@ -4,7 +4,7 @@ import { useRestaurants, useOccupancy, Restaurant, useBookTable } from '../api/R
 import { useSelector } from 'react-redux';
 import { restaurantsSelector } from '../store/selectors';
 
-const formatHours = (hours: number) => `${Math.round(hours / 100)}:${hours % 100 === 0 ? '00' : hours % 100}`;
+const formatHours = (hours: number) => `${Math.floor(hours / 100)}:${hours % 100 === 0 ? '00' : hours % 100}`;
 
 interface RestaurantDetailsProps {}
 
@@ -17,7 +17,7 @@ const Reservations: FC<ReservationsProps> = ({ date, restaurant }) => {
   const bookTable = useBookTable();
   const occupancy = useOccupancy(restaurant, date);
   const times = Object.keys(occupancy);
-  const freeTables = times.filter(time => occupancy[time] < restaurant.tables);
+  const freeTables = times.filter(time => occupancy[time] < restaurant.tables && time >= formatHours((new Date().getHours() * 100 + new Date().getMinutes())));
   const [bookingTime, setBookingTime] = useState(freeTables.length ? freeTables[0] : undefined);
 
   useEffect(() => {
@@ -31,8 +31,11 @@ const Reservations: FC<ReservationsProps> = ({ date, restaurant }) => {
   const handleReserveButtonClick = () => {
     setBookingTime(freeTables.length ? freeTables[0] : undefined);
     bookTable(restaurant, date, bookingTime as string);
-    // todo create a token and store it in the restaurant reservations map
   };
+
+  if (date < new Date().toISOString().substring(0, 10)) {
+    return <p>Sorry, you cannot book in the past!</p>
+  }
 
   return (
     <>
