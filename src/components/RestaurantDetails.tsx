@@ -1,4 +1,4 @@
-import React, { ChangeEvent, FC, useState } from 'react';
+import React, { ChangeEvent, FC, useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { useRestaurants, useOccupancy, Restaurant, useBookTable } from '../api/Restaurant';
 import { useSelector } from 'react-redux';
@@ -19,6 +19,10 @@ const Reservations: FC<ReservationsProps> = ({ date, restaurant }) => {
   const times = Object.keys(occupancy);
   const freeTables = times.filter(time => occupancy[time] < restaurant.tables);
   const [bookingTime, setBookingTime] = useState(freeTables.length ? freeTables[0] : undefined);
+
+  useEffect(() => {
+    setBookingTime(freeTables.length ? freeTables[0] : undefined);
+  }, [freeTables]);
 
   const handleTimeChange = (event: ChangeEvent<HTMLSelectElement>) => {
     setBookingTime(event.target.value);
