@@ -1,6 +1,6 @@
 import React, { ChangeEvent, FC, useMemo, useState } from 'react';
 import { useParams } from 'react-router-dom';
-import { Restaurant, useFreeTables } from '../api/Restaurant';
+import { Restaurant, useFreeTables, useRestaurants } from '../api/Restaurant';
 import { useSelector, useDispatch } from 'react-redux';
 import { restaurantsSelector } from '../store/selectors';
 import { bookTable } from '../store/actions';
@@ -74,9 +74,10 @@ export const BookingPanel: FC<BookingPanelProps> = ({ restaurant }) => {
   );
 };
 
-interface RestaurantDetailsPageProps {}
-export const RestaurantDetailsPage: FC<RestaurantDetailsPageProps> = () => {
-  const { id } = useParams();
+interface RestaurantDetailsPageProps {
+  id: string;
+}
+export const RestaurantDetailsPage: FC<RestaurantDetailsPageProps> = ({ id }) => {
   const restaurants = useSelector(restaurantsSelector);
   const restaurant = useMemo(() => (id ? restaurants[id] : null), [id, restaurants]);
 
@@ -100,4 +101,20 @@ export const RestaurantDetailsPage: FC<RestaurantDetailsPageProps> = () => {
       <BookingPanel restaurant={restaurant} />
     </>
   );
+};
+
+interface RestaurantDetailsPageWrapperProps {}
+export const RestaurantDetailsPageWrapper: FC<RestaurantDetailsPageWrapperProps> = () => {
+  const { id } = useParams();
+  const { isError, isLoading } = useRestaurants();
+
+  if (isLoading) {
+    return <p>Loading. Please wait...</p>;
+  }
+
+  if (isError) {
+    return <p>Unexpected error occurred! Please try again later!</p>;
+  }
+
+  return <RestaurantDetailsPage id={id} />;
 };
