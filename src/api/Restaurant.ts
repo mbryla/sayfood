@@ -19,12 +19,15 @@ export interface Restaurant {
   id: string;
   name: string;
   address: string;
+  lat: number;
+  lon: number;
   tables: number;
   tableSize: number;
   openingTime: number;
   closingTime: number;
   reservationTimeMinutes: number;
   reservations: Record<string, Array<Reservation>>;
+  safetyFeatures: string[];
 }
 
 export const useRestaurants = () => {

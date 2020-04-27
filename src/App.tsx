@@ -4,7 +4,7 @@ import { BrowserRouter as Router, Route, Switch, Redirect } from 'react-router-d
 import { LandingPage } from './components/LandingPage';
 import { RestaurantDetails } from './components/RestaurantDetails';
 import { RestaurantsList } from './components/RestaurantsList';
-import { MyRestaurantPage } from './components/myrestaurant/MyRestaurantPage';
+import { MyRestaurantPage, VerifyReservation, CancelReservation } from './components/myrestaurant/MyRestaurantPage';
 
 interface AppProps {}
 
@@ -20,12 +20,16 @@ export const App: FC<AppProps> = () => {
         <Route exact path="/booking">
           <Redirect to="/booking/restaurants" />
         </Route>
-        <Route exact path="/booking/restaurants">
-          <RestaurantsList />
+        <Route exact path="/booking/restaurants/:id?" component={RestaurantsList}>
         </Route>
-        <Route exact path="/booking/restaurants/:id" children={<RestaurantDetails />} />
         <Route exact path="/myrestaurant/">
           <MyRestaurantPage />
+        </Route>
+        <Route exact path="/myrestaurant/verify">
+          <VerifyReservation />
+        </Route>
+        <Route exact path="/myrestaurant/cancel">
+          <CancelReservation />
         </Route>
         <Route path="*">Not found (404)</Route>
       </Switch>
