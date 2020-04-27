@@ -24,15 +24,10 @@ export const App: FC<AppProps> = () => {
         <Route exact path="/booking/restaurants/:id?" component={RestaurantsList} />
         <Route exact path="/booking/restaurants/:id/book" component={RestaurantsList} />
 
-        <Route exact path="/myrestaurant/">
-          <MyRestaurantPage />
-        </Route>
-        <Route exact path="/myrestaurant/verify">
-          <VerifyReservation />
-        </Route>
-        <Route exact path="/myrestaurant/cancel">
-          <CancelReservation />
-        </Route>
+        <Route exact path="/myrestaurant/" component={MyRestaurantPage} />
+        <Route exact path="/myrestaurant/verify" component={VerifyReservation} />
+        <Route exact path="/myrestaurant/cancel" component={CancelReservation} />
+        
         <Route path="*">Not found (404)</Route>
       </Switch>
     </Router>
