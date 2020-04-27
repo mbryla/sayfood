@@ -61,7 +61,6 @@ app.get('/reset', async (req, res) => {
     safetyFeatures: []
   });
   await create({
-    id: 'cindirella',
     name: 'Cindirella',
     address: '88 Louise Weiss Street',
     city: 'Brussels',
