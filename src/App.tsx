@@ -2,8 +2,8 @@ import React, { FC } from 'react';
 import { BrowserRouter as Router, Route, Switch, Redirect } from 'react-router-dom';
 
 import { LandingPage } from './components/LandingPage';
-import { RestaurantDetailsPageWrapper } from './components/RestaurantDetails';
-import { RestaurantsList } from './components/RestaurantsList';
+import { RestaurantsList } from './components/booking/RestaurantsList';
+import { RestaurantBookingPageWrapper } from './components/booking/RestaurantBooking';
 import { MyRestaurantPage, VerifyReservation, CancelReservation } from './components/myrestaurant/MyRestaurantPage';
 
 interface AppProps {}
@@ -17,11 +17,13 @@ export const App: FC<AppProps> = () => {
         <Route exact path="/">
           <LandingPage />
         </Route>
+
         <Route exact path="/booking">
           <Redirect to="/booking/restaurants" />
         </Route>
-        <Route exact path="/booking/restaurants/:id?" component={RestaurantsList}>
-        </Route>
+        <Route exact path="/booking/restaurants/:id?" component={RestaurantsList} />
+        <Route exact path="/booking/restaurants/:id/book" component={RestaurantsList} />
+
         <Route exact path="/myrestaurant/">
           <MyRestaurantPage />
         </Route>

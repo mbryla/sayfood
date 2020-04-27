@@ -1,13 +1,14 @@
 import React, { FC, useMemo, useState } from 'react';
 import { useSelector } from 'react-redux';
-import { Link, useParams, RouteComponentProps } from 'react-router-dom';
-import { useRestaurants, Restaurant } from '../api/Restaurant';
-import { restaurantsSelector } from '../store/selectors';
+import { Link, useParams, RouteComponentProps, Route, Switch } from 'react-router-dom';
+import { useRestaurants, Restaurant } from '../../api/Restaurant';
+import { restaurantsSelector } from '../../store/selectors';
 
-import { Typography, Grid, Box, MenuItem, MenuList, Paper, Checkbox, List, ListItem, Button, AppBar, Toolbar } from '@material-ui/core';
-import { Person, Check, CheckCircle, Close } from '@material-ui/icons';
+import { Typography, Grid, Box, MenuItem, MenuList, Paper, List, ListItem, Button, AppBar, Toolbar } from '@material-ui/core';
+import { Person, CheckCircle, Close, ArrowBack } from '@material-ui/icons';
 import { Map, Marker, TileLayer } from 'react-leaflet';
 import L from 'leaflet';
+import { RestaurantBookingPageWrapper } from './RestaurantBooking';
 
 interface RestaurantEntryProps {
   restaurant: Restaurant;
@@ -54,6 +55,7 @@ const RestaurantDetails: FC<{
         </List>
       </Box>
       <Button color="primary" onClick={() => onBook()}>Book a table</Button>
+      <Button color="secondary">Report a violation</Button>
     </>
   );
 };
@@ -101,32 +103,47 @@ export const RestaurantsList: FC<RouteComponentProps<{id: string}>> = (props) =>
   };
 
   const bookAtRestaurant = (id: string) => {
-    props.history.push(`/booking.restaurants/${id}/book`);
+    props.history.push(`/booking/restaurants/${id}/book`);
   }
 
   return (
     <Box height="100vh">
       <Grid container>
         <Grid item xs={4}>
-          <AppBar position="relative" style={{backgroundColor: '#ffa000'}}>
-            <Toolbar>
-              <Typography variant="h4">
-              Certified Restaurants
-              </Typography>
-            </Toolbar>
-          </AppBar>
-          <Box p={2}>
-            <MenuList>
-              {restaurantsArray.map(restaurant => (
-                <MenuItem
-                  selected={restaurant.id === id || restaurant.id === highlightedId}
-                  
-                  onClick={() => selectRestaurant(restaurant.id)}>
-                  <RestaurantMenuEntry key={restaurant.id} restaurant={restaurant} />
-                </MenuItem>
-              ))}
-            </MenuList>
-          </Box>
+          <Switch>
+            <Route exact path="/booking/restaurants/:id?">
+              <AppBar position="relative" style={{backgroundColor: '#ffa000'}}>
+                <Toolbar>
+                  <Typography variant="h4">
+                  Certified Restaurants
+                  </Typography>
+                </Toolbar>
+              </AppBar>
+              <Box p={2}>
+                <MenuList>
+                  {restaurantsArray.map(restaurant => (
+                    <MenuItem
+                      selected={restaurant.id === id || restaurant.id === highlightedId}
+                      
+                      onClick={() => selectRestaurant(restaurant.id)}>
+                      <RestaurantMenuEntry key={restaurant.id} restaurant={restaurant} />
+                    </MenuItem>
+                  ))}
+                </MenuList>
+              </Box>
+            </Route>
+            <Route exact path="/booking/restaurants/:id/book">
+              <AppBar position="relative" style={{backgroundColor: '#ffa000'}}>
+                <Toolbar>
+                  <Typography variant="h4">
+                    <Link to={`/booking/restaurants/${id}`}><ArrowBack style={{cursor: "pointer"}} /></Link> Book a Table
+                  </Typography>
+                </Toolbar>
+              </AppBar>
+              <RestaurantBookingPageWrapper id={id} />
+            </Route>
+          </Switch>
+          
         </Grid>
         <Grid item xs={8}>
           <Box position="relative" height="100vh">
