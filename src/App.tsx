@@ -2,7 +2,7 @@ import React, { FC } from 'react';
 import { BrowserRouter as Router, Route, Switch, Redirect } from 'react-router-dom';
 
 import { LandingPage } from './components/LandingPage';
-import { RestaurantDetails } from './components/RestaurantDetails';
+import { RestaurantDetailsPageWrapper } from './components/RestaurantDetails';
 import { RestaurantsList } from './components/RestaurantsList';
 import { MyRestaurantPage, VerifyReservation, CancelReservation } from './components/myrestaurant/MyRestaurantPage';
 

@@ -1,8 +1,19 @@
-import { Restaurant } from './Restaurant';
+import * as cors from 'cors';
+import * as express from 'express';
+import { addBooking, all, clear, create } from '../db/Restaurant';
+import { normalizedResponse, normalizedError } from '../handlers';
 
-export const mockRestaurants: Record<string, Restaurant> = {
-  'fancy-food': {
-    id: 'fancy-food',
+export const app = express();
+app.use(cors({ origin: true }));
+app.use(normalizedResponse);
+
+app.get('/', (req, res) => {
+  res.normalizedFromPromise(200, all());
+});
+
+app.get('/reset', async (req, res) => {
+  await clear();
+  await create({
     name: 'Fancy Food',
     address: '34 Paul-Henri Spaak Street',
     city: 'Brussels',
@@ -20,9 +31,8 @@ export const mockRestaurants: Record<string, Restaurant> = {
       "staff use disposable gloves",
       "sanitised tables",
     ]
-  },
-  'antonio-mozzi': {
-    id: 'antonio-mozzi',
+  });
+  await create({
     name: 'Antonio Mozzi',
     address: '75 Alcide de Gasperi Street',
     city: 'Brussels',
@@ -35,9 +45,8 @@ export const mockRestaurants: Record<string, Restaurant> = {
     bookingDuration: 90,
     bookings: {},
     safetyFeatures: []
-  },
-  'eat-me': {
-    id: 'eat-me',
+  });
+  await create({
     name: 'Eat Me',
     address: '63 Schuman Street',
     city: 'Brussels',
@@ -50,8 +59,8 @@ export const mockRestaurants: Record<string, Restaurant> = {
     bookingDuration: 45,
     bookings: {},
     safetyFeatures: []
-  },
-  cindirella: {
+  });
+  await create({
     id: 'cindirella',
     name: 'Cindirella',
     address: '88 Louise Weiss Street',
@@ -65,9 +74,8 @@ export const mockRestaurants: Record<string, Restaurant> = {
     bookingDuration: 60,
     bookings: {},
     safetyFeatures: []
-  },
-  'sushi-and-sushi': {
-    id: 'sushi-and-sushi',
+  });
+  await create({
     name: 'Sushi & Sushi',
     address: '19 Adenauer Street',
     city: 'Brussels',
@@ -80,7 +88,14 @@ export const mockRestaurants: Record<string, Restaurant> = {
     bookingDuration: 45,
     bookings: {},
     safetyFeatures: []
-  },
-};
+  });
+  res.normalized(200, { result: 'success' });
+});
 
-export const mockMyRestaurantId = 'antonio-mozzi';
+app.put('/:id', (req, res) => {
+  const { id: restaurantId } = req.params || {};
+  const restaurantUpdate = req.body || {};
+  res.normalizedFromPromise(200, addBooking(restaurantId, restaurantUpdate.date, restaurantUpdate.time));
+});
+
+app.use(normalizedError);

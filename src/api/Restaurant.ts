@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useDispatch } from 'react-redux';
-import { mockRestaurants } from './mocks';
-import { setRestaurants, bookTable } from '../store/actions';
+import { setRestaurants } from '../store/actions';
+import { get } from './network';
 
 const formatTime = (hours: number) => `${Math.round(hours / 100)}:${hours % 100 === 0 ? '00' : hours % 100}`;
 
@@ -19,14 +19,15 @@ export interface Restaurant {
   id: string;
   name: string;
   address: string;
+  city: string;
   lat: number;
   lon: number;
   tables: number;
   tableSize: number;
-  openingTime: number;
-  closingTime: number;
-  reservationTimeMinutes: number;
-  reservations: Record<string, Array<Reservation>>;
+  openingTime: string;
+  closingTime: string;
+  bookingDuration: number;
+  bookings: Record<string, Array<Reservation>>;
   safetyFeatures: string[];
 }
 
@@ -40,11 +41,16 @@ export const useRestaurants = () => {
     setIsError(false);
     dispatch(setRestaurants({}));
 
-    setTimeout(() => {
-      dispatch(setRestaurants({ ...mockRestaurants }));
+    get('/restaurants').then(response => {
+      const restaurantsById: Record<string, Restaurant> = {};
+      response.result.forEach((restaurant: Restaurant) => {
+        restaurantsById[restaurant.id] = restaurant;
+      });
+
+      dispatch(setRestaurants(restaurantsById));
       setIsLoading(false);
       setIsError(false);
-    }, 300);
+    });
   }, [dispatch]);
 
   return { isError, isLoading };
@@ -57,17 +63,17 @@ export const useOccupancy = (restaurant: Restaurant, date: string) => {
 
   // create empty occupancy array
   const occupancy: Record<string, number> = {};
-  for (let time = restaurant.openingTime; time < restaurant.closingTime - restaurant.reservationTimeMinutes; time += 30) {
+  for (let time = Number(restaurant.openingTime); time < Number(restaurant.closingTime) - restaurant.bookingDuration; time += 30) {
     if (time % 100 === 60) {
       time += 40; // hour flip
     }
     occupancy[formatTime(time)] = 0;
   }
 
-  // fill in occupancy based on reservations
-  const reservations = restaurant.reservations[date] || [];
-  reservations.forEach(reservation => {
-    for (let time = reservation.time; time < reservation.time + reservation.duration; time += 30) {
+  // fill in occupancy based on bookings
+  const bookings = restaurant.bookings[date] || [];
+  bookings.forEach(booking => {
+    for (let time = Number(booking.time); time < Number(booking.time) + restaurant.bookingDuration; time += 30) {
       if (time % 100 === 60) {
         time += 40; // hour flip
       }
@@ -78,35 +84,11 @@ export const useOccupancy = (restaurant: Restaurant, date: string) => {
   return occupancy;
 };
 
-export const useBookTable = () => {
-  const dispatch = useDispatch();
-  const generateCode = (reservations: Array<Reservation>) => {
-    const existingCodes = reservations.map(reservation => reservation.code);
-    let code;
-    do {
-      code = `${Math.random()}`.substring(2, 6);
-    } while (existingCodes.includes(code));
-    return code;
-  };
-
-  return (restaurant: Restaurant, date: string, time: string) =>
-    new Promise(resolve => {
-      setTimeout(() => {
-        const reservationsMap: Record<string, Array<Reservation>> = mockRestaurants[restaurant.id].reservations;
-
-        if (!Array.isArray(reservationsMap[date])) {
-          reservationsMap[date] = [];
-        }
-
-        reservationsMap[date].push({
-          time: Number(time.replace(/:/, '')),
-          duration: restaurant.reservationTimeMinutes,
-          maximumNumberOfPeople: restaurant.tableSize,
-          code: generateCode(reservationsMap[date]),
-        });
-
-        dispatch(bookTable({ ...mockRestaurants }));
-        resolve();
-      }, 300);
-    });
+export const useFreeTables = (restaurant: Restaurant, date: string) => {
+  const occupancy = useOccupancy(restaurant, date);
+  const freeTables: Record<string, number> = {};
+  Object.keys(occupancy).filter(time => occupancy[time] < restaurant.tables).forEach(time => {
+    freeTables[time] = restaurant.tables - occupancy[time];
+  });
+  return freeTables;
 };

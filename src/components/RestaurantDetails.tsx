@@ -1,44 +1,40 @@
-import React, { ChangeEvent, FC, useEffect, useState } from 'react';
+import React, { ChangeEvent, FC, useMemo, useState } from 'react';
 import { useParams } from 'react-router-dom';
-import { useRestaurants, useOccupancy, Restaurant, useBookTable } from '../api/Restaurant';
-import { useSelector } from 'react-redux';
+import { Restaurant, useFreeTables, useRestaurants } from '../api/Restaurant';
+import { useSelector, useDispatch } from 'react-redux';
 import { restaurantsSelector } from '../store/selectors';
+import { bookTable } from '../store/actions';
 
 const formatHours = (hours: number) => `${Math.floor(hours / 100)}:${hours % 100 === 0 ? '00' : hours % 100}`;
 
-interface RestaurantDetailsProps {}
-
-interface ReservationsProps {
+interface TimePickerProps {
+  restaurantId: string;
+  freeTables: Record<string, number>;
   date: string;
-  restaurant: Restaurant;
 }
-
-const Reservations: FC<ReservationsProps> = ({ date, restaurant }) => {
-  const bookTable = useBookTable();
-  const occupancy = useOccupancy(restaurant, date);
-  const times = Object.keys(occupancy);
-  const freeTables = times.filter(time => occupancy[time] < restaurant.tables && time >= formatHours((new Date().getHours() * 100 + new Date().getMinutes())));
-  const [bookingTime, setBookingTime] = useState(freeTables.length ? freeTables[0] : undefined);
+export const TimePicker: FC<TimePickerProps> = ({ restaurantId, freeTables, date }) => {
+  const dispatch = useDispatch();
+  const [bookingTime, setBookingTime] = useState<string>(Object.keys(freeTables)[0]);
+  const bookableSlots = Object.keys(freeTables).filter(
+    time => time >= formatHours(new Date().getHours() * 100 + new Date().getMinutes()).replace(/:/, '')
+  );
 
   const handleTimeChange = (event: ChangeEvent<HTMLSelectElement>) => {
     setBookingTime(event.target.value);
   };
 
   const handleReserveButtonClick = () => {
-    setBookingTime(freeTables.length ? freeTables[0] : undefined);
-    bookTable(restaurant, date, bookingTime as string);
+    dispatch(bookTable(restaurantId, date, bookingTime.replace(/:/, '')));
   };
 
-  if (date < new Date().toISOString().substring(0, 10)) {
-    return <p>Sorry, you cannot book in the past!</p>
-  }
+  console.log('rendering TimePicker', restaurantId, freeTables, date, bookingTime, bookableSlots);
 
   return (
     <>
       <select id="time" name="time" value={bookingTime} onChange={handleTimeChange}>
-        {freeTables.map(time => (
+        {bookableSlots.map(time => (
           <option key={time} value={time}>
-            {time} - {restaurant.tables - occupancy[time]} free tables
+            {time} - {freeTables[time]} free tables
           </option>
         ))}
       </select>
@@ -47,24 +43,49 @@ const Reservations: FC<ReservationsProps> = ({ date, restaurant }) => {
   );
 };
 
-export const RestaurantDetails: FC<RestaurantDetailsProps> = () => {
-  const { isError, isLoading } = useRestaurants();
-  const { id } = useParams();
-  const restaurants = useSelector(restaurantsSelector);
-  const restaurant = id ? restaurants[id] : null;
+interface BookingPanelProps {
+  restaurant: Restaurant;
+}
+export const BookingPanel: FC<BookingPanelProps> = ({ restaurant }) => {
   const [date, setDate] = useState<string>(new Date().toISOString().substring(0, 10));
+  const freeTables = useFreeTables(restaurant, date);
 
-  if (isLoading) {
-    return <p>Loading. Please wait...</p>;
-  }
-
-  if (isError || !restaurant) {
-    return <p>Unexpected error occurred! Please try again later!</p>;
-  }
+  const inThePast = date < new Date().toISOString().substring(0, 10);
+  const noFreeTables = Object.keys(freeTables).length === 0;
 
   const handleDateChange = (event: ChangeEvent<HTMLInputElement>) => {
     setDate(event.target.value);
   };
+
+  console.log('rendering BookingPanelProps', date, freeTables, inThePast, noFreeTables);
+
+  return (
+    <>
+      <input type="date" value={date} onChange={handleDateChange} />
+      {inThePast && <p>You cannot book a table in the past!</p>}
+      {!inThePast && noFreeTables && <p>There are no more free tables at this day!</p>}
+      {!inThePast && !noFreeTables && (
+        <>
+          <p>At which time would you like to book a table?</p>
+          <TimePicker restaurantId={restaurant.id} freeTables={freeTables} date={date} />
+        </>
+      )}
+    </>
+  );
+};
+
+interface RestaurantDetailsPageProps {
+  id: string;
+}
+export const RestaurantDetailsPage: FC<RestaurantDetailsPageProps> = ({ id }) => {
+  const restaurants = useSelector(restaurantsSelector);
+  const restaurant = useMemo(() => (id ? restaurants[id] : null), [id, restaurants]);
+
+  console.log('rendering RestaurantDetailsPage', id, restaurants, restaurant);
+
+  if (!restaurant) {
+    return <p>Not found</p>;
+  }
 
   return (
     <>
@@ -74,12 +95,26 @@ export const RestaurantDetails: FC<RestaurantDetailsProps> = () => {
         This restaurant safely offers {restaurant.tables} tables {restaurant.tableSize} people each.
       </p>
       <p>
-        The restaurant is open from {formatHours(restaurant.openingTime)} to {formatHours(restaurant.closingTime)}.
+        The restaurant is open from {formatHours(Number(restaurant.openingTime))} to {formatHours(Number(restaurant.closingTime))}.
       </p>
-      <p>You will have {restaurant.reservationTimeMinutes} minutes to consume your meal.</p>
-      <input type="date" value={date} onChange={handleDateChange} />
-      <p>At which time would you like to book a table?</p>
-      <Reservations date={date} restaurant={restaurant} />
+      <p>You will have {restaurant.bookingDuration} minutes to consume your meal.</p>
+      <BookingPanel restaurant={restaurant} />
     </>
   );
+};
+
+interface RestaurantDetailsPageWrapperProps {}
+export const RestaurantDetailsPageWrapper: FC<RestaurantDetailsPageWrapperProps> = () => {
+  const { id } = useParams();
+  const { isError, isLoading } = useRestaurants();
+
+  if (isLoading) {
+    return <p>Loading. Please wait...</p>;
+  }
+
+  if (isError) {
+    return <p>Unexpected error occurred! Please try again later!</p>;
+  }
+
+  return <RestaurantDetailsPage id={id} />;
 };

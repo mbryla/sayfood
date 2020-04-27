@@ -5,6 +5,7 @@ const initialState: RestaurantsState = {
 };
 
 export const restaurantsReducer = (state = initialState, action: RestaurantActions): RestaurantsState => {
+  console.log('updating store', state, action);
   switch (action.type) {
     case SET_RESTAURANTS:
       return {
