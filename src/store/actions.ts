@@ -1,6 +1,6 @@
 import { ThunkAction } from 'redux-thunk';
 import { Restaurant } from '../api/Restaurant';
-import { SetRestaurantsAction, SET_RESTAURANTS, RestaurantsState } from './types';
+import { SetRestaurantsAction, SET_RESTAURANTS, RestaurantsState, SET_CODE, SetCodeAction, RestaurantActions } from './types';
 import { get, put } from '../api/network';
 
 export const setRestaurants = (restaurants: Record<string, Restaurant>): SetRestaurantsAction => ({
@@ -8,13 +8,19 @@ export const setRestaurants = (restaurants: Record<string, Restaurant>): SetRest
   restaurants,
 });
 
+export const setCode = (code: string): SetCodeAction => ({
+  type: SET_CODE,
+  code,
+});
+
 export const bookTable = (
   restaurantId: string,
   date: string,
   time: string
-): ThunkAction<void, RestaurantsState, unknown, SetRestaurantsAction> => async dispatch => {
+): ThunkAction<void, RestaurantsState, unknown, RestaurantActions> => async dispatch => {
   console.log('booking table', restaurantId, date, time);
-  await put(`/restaurants/${restaurantId}`, {
+  dispatch(setCode(''));
+  const code = await put(`/restaurants/${restaurantId}`, {
     date,
     time,
   });
@@ -27,8 +33,8 @@ export const bookTable = (
   const action = setRestaurants(restaurantsById);
   console.log('dispatching', action);
   dispatch(action);
+  dispatch(setCode(code.result));
 
-  
   //   get('/restaurants').then(response => {
   //     const restaurantsById: Record<string, Restaurant> = {};
   //     response.result.forEach((restaurant: Restaurant) => {

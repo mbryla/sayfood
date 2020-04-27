@@ -1,10 +1,10 @@
 import React, { ChangeEvent, FC, useMemo, useState } from 'react';
-import { useParams } from 'react-router-dom';
 import { Restaurant, useFreeTables, useRestaurants } from '../../api/Restaurant';
 import { useSelector, useDispatch } from 'react-redux';
-import { restaurantsSelector } from '../../store/selectors';
+import { restaurantsSelector, codeSelector } from '../../store/selectors';
 import { bookTable } from '../../store/actions';
-import { Box, Button} from '@material-ui/core';
+import { Box, Button } from '@material-ui/core';
+import { Alert } from '@material-ui/lab';
 
 const formatHours = (hours: number) => `${Math.floor(hours / 100)}:${hours % 100 === 0 ? '00' : hours % 100}`;
 
@@ -16,7 +16,7 @@ interface TimePickerProps {
 export const TimePicker: FC<TimePickerProps> = ({ restaurantId, freeTables, date }) => {
   const dispatch = useDispatch();
   const [bookingTime, setBookingTime] = useState<string>(Object.keys(freeTables)[0]);
-  console.log('freetables', freeTables)
+  console.log('freetables', freeTables);
   const bookableSlots = Object.keys(freeTables);
 
   const handleTimeChange = (event: ChangeEvent<HTMLSelectElement>) => {
@@ -39,7 +39,7 @@ export const TimePicker: FC<TimePickerProps> = ({ restaurantId, freeTables, date
         ))}
       </select>
       <Button color="primary" onClick={handleReserveButtonClick}>
-          Confirm booking
+        Confirm booking
       </Button>
     </>
   );
@@ -81,6 +81,7 @@ interface RestaurantBookingPageProps {
 }
 export const RestaurantBookingPage: FC<RestaurantBookingPageProps> = ({ id }) => {
   const restaurants = useSelector(restaurantsSelector);
+  const code = useSelector(codeSelector);
   const restaurant = useMemo(() => (id ? restaurants[id] : null), [id, restaurants]);
 
   console.log('rendering RestaurantDetailsPage', id, restaurants, restaurant);
@@ -99,11 +100,16 @@ export const RestaurantBookingPage: FC<RestaurantBookingPageProps> = ({ id }) =>
       </p>
       <p>You will have {restaurant.bookingDuration} minutes to consume your meal.</p>
       <BookingPanel restaurant={restaurant} />
+      {code && (
+        <Box>
+          <Alert severity="success">Table booked! Your reservation code is: {code}</Alert>
+        </Box>
+      )}
     </Box>
   );
 };
 
-export const RestaurantBookingPageWrapper: FC<{ id: string}> = ({ id }) => {
+export const RestaurantBookingPageWrapper: FC<{ id: string }> = ({ id }) => {
   const { isError, isLoading } = useRestaurants();
 
   if (isLoading) {

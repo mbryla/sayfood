@@ -44,7 +44,11 @@ app.get('/reset', async (req, res) => {
     closingTime: '2300',
     bookingDuration: 90,
     bookings: {},
-    safetyFeatures: []
+    safetyFeatures: [
+      "reduced table density",
+      "staff use disposable gloves",
+      "sanitised tables",
+    ]
   });
   await create({
     name: 'Eat Me',
@@ -58,7 +62,11 @@ app.get('/reset', async (req, res) => {
     closingTime: '2300',
     bookingDuration: 45,
     bookings: {},
-    safetyFeatures: []
+    safetyFeatures: [
+      "reduced table density",
+      "staff use disposable gloves",
+      "sanitised tables",
+    ]
   });
   await create({
     name: 'Cindirella',
@@ -72,7 +80,11 @@ app.get('/reset', async (req, res) => {
     closingTime: '2300',
     bookingDuration: 60,
     bookings: {},
-    safetyFeatures: []
+    safetyFeatures: [
+      "reduced table density",
+      "staff use disposable gloves",
+      "sanitised tables",
+    ]
   });
   await create({
     name: 'Sushi & Sushi',
@@ -86,7 +98,11 @@ app.get('/reset', async (req, res) => {
     closingTime: '2300',
     bookingDuration: 45,
     bookings: {},
-    safetyFeatures: []
+    safetyFeatures: [
+      "reduced table density",
+      "staff use disposable gloves",
+      "sanitised tables",
+    ]
   });
   res.normalized(200, { result: 'success' });
 });

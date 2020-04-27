@@ -31,10 +31,13 @@ export const create = (resturant: Omit<Restaurant, 'id'>) => createDoc('restaura
 
 export const withId = (id: string): Promise<RestaurantData> => docWithId('restaurants', id);
 
-export const addBooking = (restaurantId: string, date: string, time: string) =>
-  updateDoc('restaurants', restaurantId, {
+export const addBooking = async (restaurantId: string, date: string, time: string) => {
+  const code = `${Math.random()}`.substring(2, 6);
+  await updateDoc('restaurants', restaurantId, {
     [`bookings.${date}`]: arrayUnion({
       time,
-      code: `${Math.random()}`.substring(2, 6),
+      code,
     }),
   });
+  return code;
+};
